@@ -3,6 +3,8 @@ add_library(common_lib
         config.cpp
         logger.cpp
         logger.h
+        bcd.cpp
+        bcd.h
 )
 
 target_include_directories(common_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
