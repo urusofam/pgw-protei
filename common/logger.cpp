@@ -9,10 +9,11 @@ void setup_logger(const std::string& log_file, const std::string& log_level) {
     try {
         // Консольный и файловый логгер
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-        auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file, true);
+        auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/" + log_file, true);
 
         // Объединённый логгер
-        auto logger = std::make_shared<spdlog::logger>("multi_sink", {console_sink, file_sink});
+        std::vector<spdlog::sink_ptr> sinks{console_sink, file_sink};
+        auto logger = std::make_shared<spdlog::logger>("multi_sink", sinks.begin(), sinks.end());
         spdlog::set_default_logger(logger);
 
         // Уровень логгирования
