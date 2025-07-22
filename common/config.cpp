@@ -4,13 +4,21 @@
 
 using json = nlohmann::json;
 
+// TODO: Добавить валидацию конфига
+
 // Функция загрузки конфига для сервера
 server_config load_server_config(const std::string& path) {
     std::ifstream f(path);
     if (!f.is_open()) {
         throw std::runtime_error("Не получается открыть конфиг файл: " + path);
     }
-    json data = json::parse(f);
+
+    json data;
+    try {
+        data = json::parse(f);
+    } catch (const json::parse_error& e) {
+        throw std::runtime_error("Ошибка парсинга json: " + std::string(e.what()));
+    }
     
     server_config config;
     config.udp_ip = data["udp_ip"];
