@@ -30,7 +30,7 @@ server_config load_server_config(const std::string& path) {
     config.log_file = data["log_file"];
     config.log_level = data["log_level"];
     config.blacklist = data["blacklist"];
-    
+
     return config;
 }
 

@@ -15,6 +15,8 @@ struct server_config {
     std::string log_file;
     std::string log_level;
     std::vector<std::string> blacklist;
+
+    server_config();
 };
 
 // Структура конфига для клиента
