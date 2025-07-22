@@ -1,4 +1,5 @@
 #include "logger.h"
+#include <filesystem>
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -7,8 +8,14 @@
 // Настройка логгера
 void setup_logger(const std::string& log_file, const std::string& log_level) {
     try {
+        if (log_file.empty()) {
+            throw std::invalid_argument("Файл логов пустой");
+        }
+
         // Консольный и файловый логгер
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+
+        // Сам создаёт папку и файл, если они не существуют, главное чтобы log_file не был пустой
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/" + log_file, true);
 
         // Объединённый логгер
@@ -28,7 +35,7 @@ void setup_logger(const std::string& log_file, const std::string& log_level) {
         } else if (log_level == "critical") {
             spdlog::set_level(spdlog::level::critical);
         } else {
-            spdlog::set_level(spdlog::level::info);
+            throw std::invalid_argument("Несуществующий уровень логирования");
         }
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
