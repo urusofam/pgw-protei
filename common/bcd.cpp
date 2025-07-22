@@ -5,6 +5,7 @@
 
 // Перевод из imsi в bcd
 std::vector<uint8_t> imsi_to_bcd(const std::string& imsi) {
+    spdlog::debug("imsi_to_bcd: Начало функции");
     if (imsi.empty()) {
         spdlog::error("imsi_to_bcd: Imsi пустой");
         throw std::invalid_argument("Imsi пустой");
@@ -16,9 +17,11 @@ std::vector<uint8_t> imsi_to_bcd(const std::string& imsi) {
     // Дополняем до чётности
     if (imsi.length() % 2 != 0) {
         temp_imsi += 'F';
+        spdlog::debug("imsi_tobcd: Дополнение imsi до чётности");
     }
 
     // Кодируем цифры попарно
+    spdlog::debug("imsi_to_bcd: Начало кодировки");
     for (size_t i = 0; i < temp_imsi.length(); i += 2) {
         uint8_t byte = 0;
 
@@ -36,14 +39,17 @@ std::vector<uint8_t> imsi_to_bcd(const std::string& imsi) {
         bcd.push_back(byte);
     }
 
+    spdlog::debug("imsi_to_bcd: Конец кодировки и функции");
     return bcd;
 }
 
 // Перевод из bcd в imsi
 std::string bcd_to_imsi(const std::vector<uint8_t>& bcd) {
+    spdlog::debug("bcd_to_imsi: Начало функции");
     std::string imsi;
 
     // Декодируем байты
+    spdlog::debug("bcd_to_imsi: Начало декодировки");
     for (size_t i = 0; i < bcd.size(); i++) {
         uint8_t byte = bcd[i];
 
@@ -59,5 +65,6 @@ std::string bcd_to_imsi(const std::vector<uint8_t>& bcd) {
         imsi += '0' + value;
     }
 
+    spdlog::debug("Конец декодировки и функции");
     return imsi;
 }
