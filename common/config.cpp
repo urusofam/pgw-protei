@@ -40,7 +40,13 @@ client_config load_client_config(const std::string& path) {
     if (!f.is_open()) {
         throw std::runtime_error("Не получается открыть конфиг файл: " + path);
     }
-    json data = json::parse(f);
+
+    json data;
+    try {
+        data = json::parse(f);
+    } catch (const json::parse_error& e) {
+        throw std::runtime_error("Ошибка парсинга json: " + std::string(e.what()));
+    }
 
     client_config config;
     config.server_ip = data["server_ip"];
