@@ -9,7 +9,7 @@
 void setup_logger(const std::string& log_file, const std::string& log_level) {
     try {
         if (log_file.empty()) {
-            throw std::invalid_argument("Файл логов пустой");
+            throw std::invalid_argument("Путь к файлу логов пустой");
         }
 
         // Консольный и файловый логгер
@@ -35,7 +35,7 @@ void setup_logger(const std::string& log_file, const std::string& log_level) {
         } else if (log_level == "critical") {
             spdlog::set_level(spdlog::level::critical);
         } else {
-            throw std::invalid_argument("Несуществующий уровень логирования");
+            throw std::invalid_argument("Несуществующий уровень логирования: " + log_level);
         }
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
