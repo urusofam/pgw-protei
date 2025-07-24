@@ -1,5 +1,4 @@
 #include "logger.h"
-#include <filesystem>
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -14,7 +13,6 @@ void setup_logger(const std::string& log_file, const std::string& log_level) {
 
         // Консольный и файловый логгер
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-
         // Сам создаёт папку и файл, если они не существуют, главное чтобы log_file не был пустой
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/" + log_file, true);
 
@@ -24,19 +22,11 @@ void setup_logger(const std::string& log_file, const std::string& log_level) {
         spdlog::set_default_logger(logger);
 
         // Уровень логгирования
-        if (log_level == "debug") {
-            spdlog::set_level(spdlog::level::debug);
-        } else if (log_level == "info") {
-            spdlog::set_level(spdlog::level::info);
-        } else if (log_level == "warn") {
-            spdlog::set_level(spdlog::level::warn);
-        } else if (log_level == "error") {
-            spdlog::set_level(spdlog::level::err);
-        } else if (log_level == "critical") {
-            spdlog::set_level(spdlog::level::critical);
-        } else {
+        auto level = spdlog::level::from_str(log_level);
+        if (level == spdlog::level::off) {
             throw std::invalid_argument("Несуществующий уровень логирования: " + log_level);
         }
+        spdlog::set_level(level);
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
     }
