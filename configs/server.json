@@ -1,7 +1,8 @@
 {
   "udp_ip": "0.0.0.0",
   "udp_port": 9000,
-  "session_timeout_sec": 30,
+  "udp_buffer_size": 1024,
+  "session_timeout_sec": 5,
   "cdr_file": "cdr.log",
   "http_port": 8080,
   "graceful_shutdown_rate": 10,

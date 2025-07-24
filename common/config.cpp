@@ -23,6 +23,7 @@ server_config load_server_config(const std::string& path) {
     server_config config;
     config.udp_ip = data["udp_ip"];
     config.udp_port = data["udp_port"];
+    config.udp_buffer_size = data["udp_buffer_size"];
     config.session_timeout_sec = data["session_timeout_sec"];
     config.cdr_file = data["cdr_file"];
     config.http_port = data["http_port"];
@@ -51,6 +52,7 @@ client_config load_client_config(const std::string& path) {
     client_config config;
     config.server_ip = data["server_ip"];
     config.server_port = data["server_port"];
+    config.udp_buffer_size = data["udp_buffer_size"];
     config.log_file = data["log_file"];
     config.log_level = data["log_level"];
 

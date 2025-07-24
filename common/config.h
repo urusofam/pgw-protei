@@ -8,6 +8,7 @@
 struct server_config {
     std::string udp_ip;
     int udp_port{};
+    int udp_buffer_size{};
     int session_timeout_sec{};
     std::string cdr_file;
     int http_port{};
@@ -23,6 +24,7 @@ struct server_config {
 struct client_config {
     std::string server_ip;
     int server_port;
+    int udp_buffer_size;
     std::string log_file;
     std::string log_level;
 };
