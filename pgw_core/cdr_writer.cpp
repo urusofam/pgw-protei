@@ -1,4 +1,7 @@
 #include "cdr_writer.h"
+
+#include <iostream>
+
 #include "spdlog/spdlog.h"
 
 // Констркутор писателя cdr
@@ -20,7 +23,7 @@ void cdr_writer::write(const std::string &imsi, const std::string &action) {
 
     std::lock_guard lock(mutex_);
     file_ << std::format("{:%Y-%m-%d %H:%M:%S}", std::chrono::system_clock::now()) << ','
-    << imsi << ',' << action << '\n';
+    << imsi << ',' << action << std::endl;
 
     spdlog::debug("Запись cdr_writer, imsi: {}, action: {}. Конец функции", imsi, action);
 }
