@@ -30,6 +30,7 @@ void session_manager::start_cleaning() {
 
     if (cleaning_thread_.joinable()) {
         spdlog::warn("start_cleaning. Повторное начало чистки сессий");
+        spdlog::debug("start_cleaning. Конец функции");
         return;
     }
 
@@ -46,6 +47,10 @@ void session_manager::stop_cleaning() {
     if (cleaning_thread_.joinable()) {
         cleaning_thread_.request_stop(); // Запрашиваем остановку
         cleaning_thread_.join();         // Ждем завершения
+    } else {
+        spdlog::warn("Остановка неработающего потока чистки");
+        spdlog::debug("stop_cleaning. Конец функции");
+        return;
     }
 
     spdlog::info("Очистка сессий в потоке завершилась");
@@ -111,9 +116,11 @@ void session_manager::clean_expired_sessions(const std::stop_token &stop_token) 
             for (auto it = sessions_.begin(); it != sessions_.end();) {
                 auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - it->second);
                 if (duration.count() > config_.session_timeout_sec) {
-                    it = sessions_.erase(it);
                     spdlog::info("Сессия с imsi {} устарела и была удалена", it->first);
                     cdr_writer_->write(it->first, "Сессия закрыта по времени");
+                    it = sessions_.erase(it);
+                } else {
+                    ++it;
                 }
             }
         }
@@ -127,23 +134,30 @@ void session_manager::graceful_shutdown() {
     spdlog::info("Начинаем остановку session_manager...");
     stop_cleaning();
 
-    if (sessions_.empty()) {
-        spdlog::info("Нет активных сессий для закрытия");
-        return;
-    }
-
-    spdlog::info("Закрываем {} активных сессий со скоростью {} сессий в секунду...", sessions_.size(), config_.graceful_shutdown_rate);
-    const auto delay = std::chrono::milliseconds(1000 / config_.graceful_shutdown_rate);
-
-    // Ищем активные сессии
+    // Получаем список сессий для cdr и очищаем sessions_
+    std::vector<std::string> sessions_to_close;
     {
         std::lock_guard lock(mutex_);
-        for (auto it = sessions_.begin(); it != sessions_.end();) {
-            it = sessions_.erase(it);
-            spdlog::info("Сессия с imsi {} закрыта", it->first);
-            cdr_writer_->write(it->first, "Сессия закрыта по выключению");
-            std::this_thread::sleep_for(delay);
+        if (sessions_.empty()) {
+            spdlog::info("Нет активных сессий для закрытия");
+            return;
         }
+
+        for (const auto &imsi: sessions_ | std::views::keys) {
+            sessions_to_close.push_back(imsi);
+        }
+        sessions_.clear();
+    }
+
+    spdlog::info("Закрываем {} активных сессий со скоростью {} сессий в секунду...",
+                sessions_to_close.size(), config_.graceful_shutdown_rate);
+    const auto delay = std::chrono::milliseconds(1000 / config_.graceful_shutdown_rate);
+
+    // Записываем CDR
+    for (const auto& imsi : sessions_to_close) {
+        spdlog::info("Сессия с imsi {} закрыта", imsi);
+        cdr_writer_->write(imsi, "Сессия закрыта по выключению");
+        std::this_thread::sleep_for(delay);
     }
 
     spdlog::info("session_manager остановлен");
