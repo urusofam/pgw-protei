@@ -1,2 +1,2 @@
 add_executable(pgw_server pgw_server.cpp)
-target_link_libraries(pgw_server PRIVATE common_lib)
+target_link_libraries(pgw_server PRIVATE pgw_core)
