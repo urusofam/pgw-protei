@@ -1,13 +1,11 @@
 #include "config.h"
 #include <fstream>
-#include <stdexcept>
 
 using json = nlohmann::json;
 
 // TODO: Добавить валидацию конфига
 
-// Функция загрузки конфига для сервера
-server_config load_server_config(const std::string& path) {
+json load_json_from_file(const std::string& path) {
     std::ifstream f(path);
     if (!f.is_open()) {
         throw std::runtime_error("Не получается открыть конфиг файл: " + path);
@@ -19,6 +17,12 @@ server_config load_server_config(const std::string& path) {
     } catch (const json::parse_error& e) {
         throw std::runtime_error("Ошибка парсинга json: " + std::string(e.what()));
     }
+    return data;
+}
+
+// Функция загрузки конфига для сервера
+server_config load_server_config(const std::string& path) {
+    json data = load_json_from_file(path);
     
     server_config config;
     config.udp_ip = data["udp_ip"];
@@ -37,17 +41,7 @@ server_config load_server_config(const std::string& path) {
 
 // Функция загрузки конфига для клиента
 client_config load_client_config(const std::string& path) {
-    std::ifstream f(path);
-    if (!f.is_open()) {
-        throw std::runtime_error("Не получается открыть конфиг файл: " + path);
-    }
-
-    json data;
-    try {
-        data = json::parse(f);
-    } catch (const json::parse_error& e) {
-        throw std::runtime_error("Ошибка парсинга json: " + std::string(e.what()));
-    }
+    json data = load_json_from_file(path);
 
     client_config config;
     config.server_ip = data["server_ip"];
