@@ -1,6 +1,5 @@
 #include "bcd.h"
 
-#include <stdexcept>
 #include <spdlog/spdlog.h>
 
 // Перевод из imsi в bcd
@@ -25,7 +24,9 @@ std::vector<uint8_t> imsi_to_bcd(const std::string& imsi) {
     for (size_t i = 0; i < updated_imsi.length(); i += 2) {
         uint8_t byte = 0;
 
-        if (!isxdigit(updated_imsi[i]) || !isxdigit(updated_imsi[i + 1])) {
+
+        if ((!isdigit(updated_imsi[i]) && updated_imsi[i] != 'F')
+            || (!isdigit(updated_imsi[i + 1]) && updated_imsi[i + 1] != 'F')) {
             spdlog::critical("imsi_to_bcd, imsi: {}. В imsi должны быть только цифры");
             throw std::invalid_argument("В imsi должны быть только цифры");
         }
@@ -39,21 +40,18 @@ std::vector<uint8_t> imsi_to_bcd(const std::string& imsi) {
         bcd.push_back(byte);
     }
 
-    spdlog::debug("imsi_to_bcd, imsi: {}. Конец кодировки и функции, получившийся bcd: {}",
-        imsi, std::string(bcd.begin(), bcd.end()));
+    spdlog::debug("imsi_to_bcd, imsi: {}. Конец кодировки и функции", imsi);
     return bcd;
 }
 
 // Перевод из bcd в imsi
 std::string bcd_to_imsi(const std::vector<uint8_t>& bcd) {
-    spdlog::debug("bcd_to_imsi, bcd: {}. Начало функции", std::string(bcd.begin(), bcd.end()));
+    spdlog::debug("bcd_to_imsi. Начало функции");
     std::string imsi;
 
     // Декодируем байты
-    spdlog::debug("bcd_to_imsi, bcd: {}. Начало декодировки", std::string(bcd.begin(), bcd.end()));
-    for (size_t i = 0; i < bcd.size(); i++) {
-        uint8_t byte = bcd[i];
-
+    spdlog::debug("bcd_to_imsi. Начало декодировки");
+    for (const unsigned char& byte : bcd) {
         // Первая цифра
         imsi += '0' + (byte & 0xF);
 
@@ -66,7 +64,6 @@ std::string bcd_to_imsi(const std::vector<uint8_t>& bcd) {
         imsi += '0' + value;
     }
 
-    spdlog::debug("bcd_to_imsi, bcd: {}. Конец декодировки и функции, получившийся imsi: {}",
-        std::string(bcd.begin(), bcd.end()), imsi);
+    spdlog::debug("bcd_to_imsi. Конец декодировки и функции, получившийся imsi: {}", imsi);
     return imsi;
 }
