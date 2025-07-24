@@ -4,7 +4,7 @@
 
 #include "spdlog/spdlog.h"
 
-// Констркутор писателя cdr
+// Конструктор писателя cdr
 cdr_writer::cdr_writer(const std::string &filename) {
     spdlog::debug("cdr_writer конструктор, filename: {}. Начало функции", filename);
 
@@ -24,6 +24,10 @@ void cdr_writer::write(const std::string &imsi, const std::string &action) {
     std::lock_guard lock(mutex_);
     file_ << std::format("{:%Y-%m-%d %H:%M:%S}", std::chrono::system_clock::now()) << ','
     << imsi << ',' << action << std::endl;
+
+    if (file_.fail()) {
+        spdlog::error("Ошибка записи в cdr файл, imsi: {}, action: {}", imsi, action);
+    }
 
     spdlog::debug("Запись cdr_writer, imsi: {}, action: {}. Конец функции", imsi, action);
 }
