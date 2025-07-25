@@ -1,10 +1,12 @@
-#include "config.h"
 #include <fstream>
+
+#include "config.h"
 
 using json = nlohmann::json;
 
 // TODO: Добавить валидацию конфига
 
+// Парсинг json
 json load_json_from_file(const std::string& path) {
     std::ifstream f(path);
     if (!f.is_open()) {

@@ -1,7 +1,5 @@
 #include "bcd.h"
 
-#include <spdlog/spdlog.h>
-
 // Перевод из imsi в bcd
 std::vector<uint8_t> imsi_to_bcd(const std::string& imsi) {
     spdlog::debug("imsi_to_bcd, imsi: {}. Начало функции", imsi);

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-#include <thread>
 #include <unordered_set>
 
 #include "cdr_writer.h"

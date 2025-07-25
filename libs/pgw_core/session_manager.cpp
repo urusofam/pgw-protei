@@ -1,7 +1,5 @@
 #include "session_manager.h"
 
-#include "spdlog/spdlog.h"
-
 // Конструктор для session_manager
 session_manager::session_manager(const server_config &config) {
     spdlog::debug("session_manager конструктор. Начало функции");
@@ -162,7 +160,3 @@ void session_manager::graceful_shutdown() {
 
     spdlog::info("session_manager остановлен");
 }
-
-
-
-

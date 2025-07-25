@@ -1,13 +1,6 @@
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
-#include <fstream>
-#include <filesystem>
-#include <chrono>
-#include <thread>
-#include "cdr_writer.h"
-#include "config.h"
+
 #include "session_manager.h"
-#include "spdlog/spdlog.h"
 
 // Тесты для cdr_writer
 class cdr_writer_test : public ::testing::Test {
@@ -15,13 +8,11 @@ protected:
     std::string test_filename = "test_cdr.csv";
 
     void TearDown() override {
-        if (std::filesystem::exists(test_filename)) {
-            std::filesystem::remove(test_filename);
-        }
+        std::filesystem::remove_all("logs");
     }
 
     static std::string read_file(const std::string& filename) {
-        std::ifstream file(filename);
+        std::ifstream file("logs/" + filename);
         std::stringstream buffer;
         buffer << file.rdbuf();
         return buffer.str();
@@ -31,7 +22,7 @@ protected:
 // Создание файла
 TEST_F(cdr_writer_test, constructor_create_file) {
     cdr_writer writer(test_filename);
-    ASSERT_TRUE(std::filesystem::exists(test_filename));
+    ASSERT_TRUE(std::filesystem::exists("logs/" + test_filename));
 }
 
 // Неправильный путь

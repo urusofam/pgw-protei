@@ -1,7 +1,8 @@
 #pragma once
 
 #include <fstream>
-#include <mutex>
+
+#include "spdlog/spdlog.h"
 
 class cdr_writer {
     std::ofstream file_;

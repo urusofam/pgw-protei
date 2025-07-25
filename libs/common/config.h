@@ -1,8 +1,6 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.hpp"
 
 // Структура конфига для сервера
 struct server_config {

@@ -1,9 +1,9 @@
+#include <filesystem>
 #include <fstream>
-#include "config.h"
-#include "bcd.h"
 #include <gtest/gtest.h>
+
+#include "bcd.h"
 #include "logger.h"
-#include <spdlog/spdlog.h>
 
 // Тесты bcd
 
