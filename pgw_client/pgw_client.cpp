@@ -1,13 +1,9 @@
-#include "config.h"
-#include "logger.h"
-#include "spdlog/spdlog.h"
-#include <exception>
 #include <iostream>
 #include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
 
 #include "bcd.h"
+#include "config.h"
+#include "logger.h"
 
 int main(int argc, char* argv[]) {
     try {
@@ -27,17 +23,22 @@ int main(int argc, char* argv[]) {
         spdlog::info("Подготовка к отправке UDP пакета IMSI {} на сервер {}:{}", IMSI,
             config.server_ip, config.server_port);
 
+        // Создание сокета
         int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
         if (sockfd < 0) {
             spdlog::critical("Не удалось создать UDP сокет: {}", strerror(errno));
             return 1;
         }
+        spdlog::debug("Сокет создан");
 
+        // Создание таймера
         timeval tv{};
         tv.tv_sec = 5;
         tv.tv_usec = 0;
         setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+        spdlog::debug("Таймер к сокету создан");
 
+        // Настройка IP адреса
         sockaddr_in server_addr{};
         server_addr.sin_family = AF_INET;
         server_addr.sin_port = htons(config.server_port);
@@ -46,7 +47,9 @@ int main(int argc, char* argv[]) {
             close(sockfd);
             return 1;
         }
+        spdlog::debug("IP адрес настроен");
 
+        // Отправка UDP пакета
         if (sendto(sockfd, BCD.data(), BCD.size(), 0, (sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
             spdlog::critical("Не удалось отправить UDP пакет: {}", strerror(errno));
             close(sockfd);
@@ -54,6 +57,7 @@ int main(int argc, char* argv[]) {
         }
         spdlog::info("UDP пакет отправлен");
 
+        // Чтение ответа
         char buffer[config.udp_buffer_size];
         ssize_t n = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0, nullptr, nullptr);
 
