@@ -44,12 +44,13 @@ class pgw_server {
             spdlog::critical("Не удалось создать UDP сокет: {}", strerror(errno));
             return;
         }
+        spdlog::debug("Создан сокет");
 
         // Добавляем таймер
         timeval tv{};
-        tv.tv_sec = 1;
-        tv.tv_usec = 0;
+        tv.tv_sec = config_.udp_timer_sec;
         setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+        spdlog::debug("Добавлен таймер к сокету");
 
         // Настриваем IP адрес
         sockaddr_in server_addr{};
@@ -61,6 +62,7 @@ class pgw_server {
             running_ = false;
             return;
         }
+        spdlog::debug("IP адрес настроен");
 
         // Привязываем сокет к адресу
         if (bind(sockfd, (sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
