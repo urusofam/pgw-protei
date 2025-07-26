@@ -33,8 +33,7 @@ int main(int argc, char* argv[]) {
 
         // Создание таймера
         timeval tv{};
-        tv.tv_sec = 5;
-        tv.tv_usec = 0;
+        tv.tv_sec = config.udp_timer_sec;
         setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
         spdlog::debug("Таймер к сокету создан");
 
