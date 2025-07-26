@@ -4,7 +4,7 @@
 #include "bcd.h"
 #include "config.h"
 #include "logger.h"
-#include "socket.h"
+#include "socket_raii.h"
 
 int main(int argc, char* argv[]) {
     try {

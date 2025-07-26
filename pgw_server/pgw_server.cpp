@@ -3,7 +3,7 @@
 #include "bcd.h"
 #include "logger.h"
 #include "session_manager.h"
-#include "socket.h"
+#include "socket_raii.h"
 #include "spdlog/spdlog.h"
 
 std::atomic running_ = false;

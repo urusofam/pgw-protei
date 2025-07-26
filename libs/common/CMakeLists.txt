@@ -5,8 +5,8 @@ add_library(common_lib
         logger.h
         bcd.cpp
         bcd.h
-        socket.h
-        socket.cpp
+        socket_raii.h
+        socket_raii.cpp
 )
 
 FetchContent_Declare(
