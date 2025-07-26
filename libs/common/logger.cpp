@@ -5,12 +5,9 @@
 
 // Настройка логгера
 void setup_logger(const std::string& log_file, const std::string& log_level) {
-    if (log_file.empty()) {
-        throw std::invalid_argument("Путь к файлу логов пустой");
-    }
-
     // Консольный и файловый логгер
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+
     // Сам создаёт папку и файл, если они не существуют, главное чтобы log_file не был пустой
     auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/" + log_file, true);
 
