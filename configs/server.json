@@ -2,6 +2,7 @@
   "udp_ip": "0.0.0.0",
   "udp_port": 9000,
   "udp_buffer_size": 1024,
+  "udp_timer_sec": 1,
   "session_timeout_sec": 5,
   "cdr_file": "cdr.csv",
   "http_port": 8080,

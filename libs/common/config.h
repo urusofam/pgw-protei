@@ -2,11 +2,40 @@
 
 #include "nlohmann/json.hpp"
 
+using json = nlohmann::json;
+
+template<typename T>
+T get_required_field(const json& data, const std::string& field_name) {
+    if (!data.contains(field_name)) {
+        throw std::runtime_error("Обязательное поле отсутствует: " + field_name);
+    }
+
+    try {
+        return data[field_name].get<T>();
+    } catch (const json::type_error& e) {
+        throw std::runtime_error("Неверный тип для поля " + field_name + ": " + e.what());
+    }
+}
+
+template<typename T>
+T get_optional_field(const json& data, const std::string& field_name, const T& default_value) {
+    if (!data.contains(field_name)) {
+        return default_value;
+    }
+
+    try {
+        return data[field_name].get<T>();
+    } catch (const json::type_error& e) {
+        throw std::runtime_error("Неверный тип для поля " + field_name + ": " + e.what());
+    }
+}
+
 // Структура конфига для сервера
 struct server_config {
     std::string udp_ip;
     int udp_port{};
     int udp_buffer_size{};
+    int udp_timer_sec{};
     int session_timeout_sec{};
     std::string cdr_file;
     int http_port{};
@@ -21,8 +50,9 @@ struct server_config {
 // Структура конфига для клиента
 struct client_config {
     std::string server_ip;
-    int server_port;
-    int udp_buffer_size;
+    int server_port{};
+    int udp_buffer_size{};
+    int udp_timer_sec{};
     std::string log_file;
     std::string log_level;
 };
