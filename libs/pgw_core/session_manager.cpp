@@ -9,7 +9,7 @@ session_manager::session_manager(const server_config &config) {
     blacklist_ = {config_.blacklist.begin(), config_.blacklist.end()};
 
     spdlog::info("session_manager проинициализирован, в блэклисте {} абонентов", blacklist_.size());
-    spdlog::debug("session manager конструктор. Конец функции");
+    spdlog::debug("session_manager конструктор. Конец функции");
 }
 
 // Деструктор для session_manager
@@ -81,17 +81,16 @@ std::string session_manager::process_request(const std::string &imsi) {
 
 // Проверка на существование сессии
 bool session_manager::is_session_active(const std::string &imsi) {
-    spdlog::info("Пришёл запрос на проверку существовании сессии с imsi {}", imsi);
+    spdlog::debug("Пришёл запрос на проверку существовании сессии с imsi {}", imsi);
 
     std::lock_guard lock(mutex_);
     if (sessions_.contains(imsi)) {
-        spdlog::info("Сессия с imsi {} существует", imsi);
+        spdlog::debug("Сессия с imsi {} существует", imsi);
         return true;
     }
 
-    spdlog::info("Сессия с imsi {} не существует", imsi);
+    spdlog::debug("Сессия с imsi {} не существует", imsi);
     return false;
-
 }
 
 // Очистка устаревших сессий
