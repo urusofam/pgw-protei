@@ -3,6 +3,7 @@
 #include "bcd.h"
 #include "logger.h"
 #include "session_manager.h"
+#include "socket.h"
 #include "spdlog/spdlog.h"
 
 std::atomic running_ = false;
@@ -38,9 +39,9 @@ class pgw_server {
     void run_udp_server() {
         spdlog::info("UDP сервер {}:{} запускается", config_.udp_ip, config_.udp_port);
 
-        // Создаём сокет
-        int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-        if (sockfd < 0) {
+        // Создаём сокет с RAII
+        socket_raii sockfd(socket(AF_INET, SOCK_DGRAM, 0));
+        if (sockfd.get() < 0) {
             spdlog::critical("Не удалось создать UDP сокет: {}", strerror(errno));
             return;
         }
@@ -49,7 +50,7 @@ class pgw_server {
         // Добавляем таймер
         timeval tv{};
         tv.tv_sec = config_.udp_timer_sec;
-        setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+        setsockopt(sockfd.get(), SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
         spdlog::debug("Добавлен таймер к сокету");
 
         // Настриваем IP адрес
@@ -58,16 +59,14 @@ class pgw_server {
         server_addr.sin_port = htons(config_.udp_port);
         if (inet_pton(AF_INET, config_.udp_ip.c_str(), &server_addr.sin_addr) <= 0) {
             spdlog::critical("Неправильный IP адрес {}", config_.udp_ip);
-            close(sockfd);
             running_ = false;
             return;
         }
         spdlog::debug("IP адрес настроен");
 
         // Привязываем сокет к адресу
-        if (bind(sockfd, (sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
+        if (bind(sockfd.get(), reinterpret_cast<sockaddr*> (&server_addr), sizeof(server_addr)) < 0) {
             spdlog::critical("Не удалось привязать UDP сокет к адресу: {}", strerror(errno));
-            close(sockfd);
             running_ = false;
             return;
         }
@@ -80,7 +79,8 @@ class pgw_server {
 
         // Читаем данные от клиента
         while (running_) {
-            ssize_t n = recvfrom(sockfd, buffer, sizeof(buffer), 0, (sockaddr*) &client_addr, &addr_len);
+            ssize_t n = recvfrom(sockfd.get(), buffer, sizeof(buffer), 0,
+                reinterpret_cast<sockaddr*> (&client_addr), &addr_len);
             if (n == 0) continue;
 
             if (n < 0) {
@@ -99,16 +99,16 @@ class pgw_server {
             // Декодируем bcd
             std::vector<uint8_t> bcd(buffer, buffer + n);
             std::string imsi = bcd_to_imsi(bcd);
-            spdlog::info("Получен UDP запрос для imsi {}", imsi);
+            spdlog::debug("Получен UDP запрос для imsi {}", imsi);
 
             // Отправляем ответ
             std::string response = session_manager_->process_request(imsi);
-            if (sendto(sockfd, response.c_str(), response.length(), 0, (sockaddr*) &client_addr, addr_len) < 0) {
+            if (sendto(sockfd.get(), response.c_str(), response.length(), 0,
+                reinterpret_cast<sockaddr*> (&client_addr), addr_len) < 0) {
                 spdlog::error("Не удалось отправить ответ для imsi {}: {}", imsi, strerror(errno));
             }
         }
 
-        close(sockfd);
         spdlog::info("UDP сервер остановлен");
     }
 
