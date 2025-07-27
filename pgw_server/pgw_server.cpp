@@ -1,6 +1,8 @@
 #include <httplib.h>
+#include <sys/epoll.h>
 
 #include "bcd.h"
+#include "epoll_raii.h"
 #include "logger.h"
 #include "session_manager.h"
 #include "socket_raii.h"
@@ -51,13 +53,34 @@ class pgw_server {
         }
         spdlog::debug("Создан сокет");
 
-        // Добавляем таймер
-        timeval tv{};
-        tv.tv_sec = config_.udp_timer_sec;
-        if (setsockopt(sockfd.get(), SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-            spdlog::error("Не удалось установить таймаут: {}", strerror(errno));
+        // Делаем сокет неблокирующим
+        int flags = fcntl(sockfd.get(), F_GETFL, 0);
+        if (flags == -1) {
+            spdlog::critical("Не удалось получить флаги сокета: {}", strerror(errno));
+            running_ = false;
+            return;
         }
-        spdlog::debug("Добавлен таймер к сокету");
+        if (fcntl(sockfd.get(), F_SETFL, flags | O_NONBLOCK) == -1) {
+            spdlog::critical("Не удалось установить неблокирующий режим для сокета: {}", strerror(errno));
+            running_ = false;
+            return;
+        }
+        spdlog::debug("Сокет переведен в неблокирующий режим");
+
+        // Создаем epoll
+        epoll_raii epollfd;
+        spdlog::debug("Epoll создан0");
+
+        // Регистрируем сокет в epoll
+        epoll_event event{};
+        event.events = EPOLLIN;
+        event.data.fd = sockfd.get();
+        if (epoll_ctl(epollfd.get(), EPOLL_CTL_ADD, sockfd.get(), &event) < 0) {
+            spdlog::critical("Не удалось добавить сокет в epoll: {}", strerror(errno));
+            running_ = false;
+            return;
+        }
+        spdlog::debug("Сокет добавлен в epoll для отслеживания");
 
         // Настриваем IP адрес
         sockaddr_in server_addr{};
@@ -78,40 +101,59 @@ class pgw_server {
         }
         spdlog::info("UDP сервер запущен");
 
-        // Создаём буфер
+        // Создаём буфер для событий epoll
+        epoll_event events[config_.epoll_max_events];
+
+        // Создаём буфер для данных
         char buffer[config_.udp_buffer_size];
         sockaddr_in client_addr{};
         socklen_t addr_len = sizeof(client_addr);
 
-        // Читаем данные от клиента
+        // Читаем данные от клиентов
         while (running_) {
-            ssize_t n = recvfrom(sockfd.get(), buffer, sizeof(buffer), 0,
-                reinterpret_cast<sockaddr*> (&client_addr), &addr_len);
-            if (n == 0) continue;
+            int n_events = epoll_wait(epollfd.get(), events, config_.epoll_max_events,
+                1000 * config_.epoll_timeout_sec);
 
-            if (n < 0) {
-                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            if (n_events < 0) {
+                if (errno == EINTR) {
                     continue;
                 }
-                spdlog::error("Ошибка recvfrom: {}", strerror(errno));
+                spdlog::critical("Ошибка epoll_wait: {}", strerror(errno));
                 running_ = false;
                 break;
             }
 
-            if (n == sizeof(buffer)) {
-                spdlog::warn("Возможно, запрос был обрезан (получено максимум байт)");
-            }
+            for (int i = 0; i < n_events; i++) {
+                if (events[i].data.fd == sockfd.get()) {
+                    while (true) {
+                        ssize_t n = recvfrom(sockfd.get(), buffer, sizeof(buffer), 0,
+                            reinterpret_cast<sockaddr*> (&client_addr), &addr_len);
 
-            // Декодируем bcd
-            std::vector<uint8_t> bcd(buffer, buffer + n);
-            std::string imsi = bcd_to_imsi(bcd);
-            spdlog::debug("Получен UDP запрос для imsi {}", imsi);
+                        if (n < 0) {
+                            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                                break;
+                            }
+                            spdlog::error("Ошибка recvfrom: {}", strerror(errno));
+                            break;
+                        }
 
-            // Отправляем ответ
-            std::string response = session_manager_->process_request(imsi);
-            if (sendto(sockfd.get(), response.c_str(), response.length(), 0,
-                reinterpret_cast<sockaddr*> (&client_addr), addr_len) < 0) {
-                spdlog::error("Не удалось отправить ответ для imsi {}: {}", imsi, strerror(errno));
+                        if (n == sizeof(buffer)) {
+                            spdlog::warn("Возможно, запрос был обрезан (получено максимум байт)");
+                        }
+
+                        // Декодируем bcd
+                        std::vector<uint8_t> bcd(buffer, buffer + n);
+                        std::string imsi = bcd_to_imsi(bcd);
+                        spdlog::debug("Получен UDP запрос для imsi {}", imsi);
+
+                        // Отправляем ответ
+                        std::string response = session_manager_->process_request(imsi);
+                        if (sendto(sockfd.get(), response.c_str(), response.length(), 0,
+                            reinterpret_cast<sockaddr*> (&client_addr), addr_len) < 0) {
+                            spdlog::error("Не удалось отправить ответ для imsi {}: {}", imsi, strerror(errno));
+                            }
+                    }
+                }
             }
         }
 
