@@ -5,6 +5,7 @@
   "udp_timer_sec": 1,
   "session_timeout_sec": 5,
   "cdr_file": "cdr.csv",
+  "http_ip": "0.0.0.0",
   "http_port": 8080,
   "graceful_shutdown_rate": 10,
   "log_file": "server.log",

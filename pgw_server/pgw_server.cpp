@@ -31,6 +31,9 @@ class pgw_server {
             udp_thread_.join();
         }
         http_server_.stop();
+        if (http_thread_.joinable()) {
+            http_thread_.join();
+        }
 
         spdlog::info("PGW сервер выключился");
     }
@@ -43,6 +46,7 @@ class pgw_server {
         socket_raii sockfd(socket(AF_INET, SOCK_DGRAM, 0));
         if (sockfd.get() < 0) {
             spdlog::critical("Не удалось создать UDP сокет: {}", strerror(errno));
+            running_ = false;
             return;
         }
         spdlog::debug("Создан сокет");
@@ -116,7 +120,7 @@ class pgw_server {
 
     // Запуск HTTP сервера
     void run_http_server() {
-        spdlog::info("HTTP сервер на порту {} запускается...", config_.http_port);
+        spdlog::info("HTTP сервер {}:{} запускается...", config_.http_ip, config_.http_port);
 
         // Настройка ручек
         http_server_.Get("/check_subscriber", [this](const httplib::Request& req, httplib::Response& res) {
@@ -145,8 +149,8 @@ class pgw_server {
             running_ = false;
         });
 
-        spdlog::info("HTTP сервер на порту {} запустился", config_.http_port);
-        http_server_.listen("0.0.0.0", config_.http_port);
+        spdlog::info("HTTP сервер {}:{} запустился", config_.http_ip, config_.http_port);
+        http_server_.listen(config_.http_ip, config_.http_port);
         spdlog::info("HTTP сервер остановлен");
     }
 public:

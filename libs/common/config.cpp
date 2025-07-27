@@ -54,7 +54,8 @@ server_config load_server_config(const std::string& path) {
         throw std::runtime_error("Путь к CDR файлу не может быть пустым");
     }
 
-    // Загрузка и валидация HTTP порта
+    // Загрузка и валидация HTTP
+    config.http_ip = get_required_field<std::string>(data, "http_ip");
     config.http_port = get_required_field<int>(data, "http_port");
     if (config.http_port < 1 || config.http_port > 65535) {
         throw std::runtime_error("Неверный HTTP порт: " + std::to_string(config.http_port)

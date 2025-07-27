@@ -38,6 +38,7 @@ struct server_config {
     int udp_timer_sec{};
     int session_timeout_sec{};
     std::string cdr_file;
+    std::string http_ip;
     int http_port{};
     int graceful_shutdown_rate{};
     std::string log_file;
