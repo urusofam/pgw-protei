@@ -35,7 +35,9 @@ int main(int argc, char* argv[]) {
         // Создание таймера
         timeval tv{};
         tv.tv_sec = config.udp_timer_sec;
-        setsockopt(sockfd.get(), SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+        if (setsockopt(sockfd.get(), SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+            spdlog::error("Не удалось установить таймаут: {}", strerror(errno));
+        }
         spdlog::debug("Таймер к сокету создан");
 
         // Настройка IP адреса
