@@ -35,7 +35,8 @@ struct server_config {
     std::string udp_ip;
     int udp_port{};
     int udp_buffer_size{};
-    int udp_timer_sec{};
+    int epoll_max_events{};
+    int epoll_timeout_sec{};
     int session_timeout_sec{};
     std::string cdr_file;
     std::string http_ip;

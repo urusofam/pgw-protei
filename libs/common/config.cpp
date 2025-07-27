@@ -37,9 +37,15 @@ server_config load_server_config(const std::string& path) {
         throw std::runtime_error("Размер UDP буфера должен быть от 512 до 65536 байт");
     }
 
-    config.udp_timer_sec = get_optional_field<int>(data, "udp_timer_sec", 1);
-    if (config.udp_timer_sec <= 0) {
-        throw std::runtime_error("Время таймера должно быть положительным числом");
+    // Загрузка и валидация epoll
+    config.epoll_max_events = get_optional_field<int>(data, "epoll_max_events", 10);
+    if (config.epoll_max_events <= 0) {
+        throw std::runtime_error("Количество событий epoll должно быть положительным числом");
+    }
+
+    config.epoll_timeout_sec = get_optional_field<int>(data, "epoll_timeout_sec", 1);
+    if (config.epoll_timeout_sec <= 0) {
+        throw std::runtime_error("Время epoll таймера должно быть положительным числом");
     }
 
     // Загрузка и валидация таймаута сессии
