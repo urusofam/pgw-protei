@@ -156,9 +156,7 @@ protected:
     }
 
     void TearDown() override {
-        if (std::filesystem::exists(config.cdr_file)) {
-            std::filesystem::remove(config.cdr_file);
-        }
+        std::filesystem::remove_all("logs");
     }
 };
 

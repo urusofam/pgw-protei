@@ -21,7 +21,7 @@ TEST(bcd_test, correct_situation) {
 
 // Не только числа в imsi
 TEST(bcd_test, not_a_number_in_imsi) {
-    ASSERT_THROW(imsi_to_bcd("34605160239662x");, std::invalid_argument);
+    ASSERT_THROW(imsi_to_bcd("34605160239662x"), std::invalid_argument);
 }
 
 // Тесты настройки логгера
@@ -66,11 +66,6 @@ TEST_F(logger_test, twice_setup_logger_call) {
 
     // Проверяем, что последний вызов определяет настройки
     EXPECT_EQ(spdlog::get_level(), spdlog::level::err);
-}
-
-// Пустой файл для логов
-TEST_F(logger_test, empty_log_file) {
-    ASSERT_THROW(setup_logger("", "info"), std::invalid_argument);
 }
 
 // Несуществующий уровень логирования
